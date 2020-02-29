@@ -1,7 +1,6 @@
 import pygame
 import os.path
 import random
-#import NeuralNetworkClass
 
 def main():
     
@@ -35,11 +34,6 @@ def main():
     tileXsize = width / noColumns
     tileYsize = height / noRows
     
-    networks = []
-    for i in range(populationSize):
-        networks.append(NeuralNetworkClass.neuralNetwork(noRows, noColumns, index))
-        index += 1
-
     #text inits
     font = pygame.font.SysFont("Times New Roman", 100)
     text1 = font.render("Blue wins!", True, blue)
@@ -125,7 +119,7 @@ def main():
         pygame.display.flip()
         clock.tick(60)
 
-def playOneRound(networks, populationSize, numberOfBestIndividuals, rateOfMutation, board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, boxColour, text, roundNumber, skillIndex, index):
+'''def playOneRound(networks, populationSize, numberOfBestIndividuals, rateOfMutation, board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, boxColour, text, roundNumber, skillIndex, index):
     #inits
     scores = [[0 for j in range(2)] for i in range(populationSize)]
     for i in range(populationSize):
@@ -173,117 +167,8 @@ def playOneRound(networks, populationSize, numberOfBestIndividuals, rateOfMutati
     networks = tempTuple[0]
     index = tempTuple[1]
     return (True, networks, index)
+'''
 
-
-def newGeneration(scores, networks, populationSize, numberOfBestIndividuals, rateOfMutation, index):
-    scores.sort()
-    newPopulation = []
-    for i in range(numberOfBestIndividuals):
-        newPopulation.append(networks[scores[populationSize - i - 1][1]])
-    for i in range(numberOfBestIndividuals):
-        for j in range(numberOfBestIndividuals):
-            child = NeuralNetworkClass.neuralNetwork(1, networks[0].sizeOfLayers, index)
-            index += 1
-            newPopulation.append(crossAndMutate((newPopulation[i], newPopulation[j]), child, rateOfMutation))
-    for i in range(numberOfBestIndividuals):
-        newPopulation.append(NeuralNetworkClass.neuralNetwork(1, networks[0].sizeOfLayers, index))
-        index += 1
-    
-    del networks
-    populationSize = len(newPopulation)
-    return (newPopulation, index)
-
-
-
-def crossAndMutate(parents, child, rateOfMutation):
-    
-    for j in range(child.numberOfLayers - 1):
-        for k in range(child.sizeOfLayers):
-            for l in range(child.sizeOfLayers):
-                
-                #crossing edges
-                child.layers[j][k].edges[l].weight = parents[random.randint(0, 1)].layers[j][k].edges[l].weight
-                #applying mutations to edges
-                if not random.randint(0, 1/rateOfMutation):
-                    child.layers[j][k].edges[l].weight = random.uniform(child.rangeOfWeightValues, child.rangeOfWeightValues)
-            
-            #crossing nodes from every but last layer
-            child.layers[j][k].bias = parents[random.randint(0, 1)].layers[j][k].bias
-            #applying mutations to them
-            if not random.randint(0, 1/rateOfMutation):
-                child.layers[j][k].bias = random.uniform(child.rangeOfWeightValues, child.rangeOfWeightValues)
-    
-    for j in range(child.sizeOfLayers):
-        #crossing nodes from last layer
-        child.layers[child.numberOfLayers - 1][j].bias = parents[random.randint(0, 1)].layers[child.numberOfLayers - 1][j].bias
-        #applying mutations to them
-        if not random.randint(0, 1/rateOfMutation):
-            child.layers[child.numberOfLayers - 1][j].bias = random.uniform(child.rangeOfWeightValues, child.rangeOfWeightValues)
-
-    return child
-
-
-
-#function responsible for bot vs bot matches
-def botVSbot(networks, board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, boxColour, firstPlayerIndex, secondPlayerIndex, drawMode):
-    
-    board = [[0 for x in range(noColumns + 2)] for y in range(noRows + 2)]
-    if drawMode:
-        drawGrid(screen, boxColour, height, width, noColumns, noRows)
-    turnIndex = firstPlayerIndex
-    turn = 0
-    count = 0
-    stillPlaying = True
-    while stillPlaying:
-        count +=1
-        position = networks[turnIndex].run(board, noColumns, noRows)
-        y = position[0]
-        x = position[1]
-        board[y][x] = turn + 1
-
-        #interacting with a screen
-        #fpsCounter = 10
-        if drawMode:
-            draw(screen, colours[turn], boxColour, height, width, x, y, tileXsize, tileYsize, widthOfLine, turn)
-        #speed test
-        #if not count % 10:
-        #    screen.fill((0, 0, 0))
-        #    font = pygame.font.SysFont("Times New Roman", 20)
-        #    text = font.render(str(count), True, boxColour)
-        #    screen.blit(text, ((width - text.get_width()) / 2, (height - text.get_height()) / 2))
-        
-        pygame.display.flip()
-        #clock.tick(fpsCounter)
-
-        if winDetection(board, x, y, inALine, turn + 1):
-            stillPlaying = False
-            return turnIndex
-        if count == noColumns * noRows:
-            return -1
-       
-        #new turn       
-        if turnIndex == firstPlayerIndex:
-            turnIndex = secondPlayerIndex
-        else:
-            turnIndex = firstPlayerIndex
-        turn = 1 - turn
-
-#checking how good is the best guy against a random opponent
-def check(pro, board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, boxColour, index):
-    counter = 0
-    for i in range(50):
-        noob = NeuralNetworkClass.neuralNetwork(noRows, noColumns, index)
-        firstMatch = botVSbot([pro, noob], board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, boxColour, 0, 1, 0)
-        secondMatch = botVSbot([noob, pro], board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, boxColour, 0, 1, 0)
-        if firstMatch == 0:
-            counter += 1
-        elif firstMatch == -1:
-            counter += 0.5
-        if secondMatch == 1:
-            counter += 1
-        elif secondMatch == -1:
-            counter += 0.5
-    return counter / 100
 
 #general draw function responsible for drawing O or X and a new box
 def draw(screen, colour, otherColour, height, width, column, row, tileXsize, tileYsize, widthOfLine, turn):
@@ -316,29 +201,8 @@ def drawO(screen, colour, tileXsize, tileYsize, column, row, widthOfLine):
 def drawBox(screen, colour, height, width, widthOfLine):
     pygame.draw.rect(screen, colour, (0, 0, width, height), widthOfLine)
 
-#win detection
-def winDetection(board, x, y, inALine, value):
 
-    moveX = [1, 0, 1, 1]   #move in x direction
-    moveY = [0, 1, 1, -1]  #move in y direction
-
-    for i in range(4):
-        sum = 1
-        for j in range(1, inALine):
-            if(board[y + j * moveY[i]][x + j * moveX[i]] != value):
-               break
-            sum += 1
-        for j in range(1, inALine):
-            if(board[y - j * moveY[i]][x - j * moveX[i]] != value):
-               break
-            sum += 1
-        if sum >= inALine:
-            return True
-    
-    #no winner yet
-    return False
-
-#fuction responsbile for saving progress to a text file
+'''#fuction responsbile for saving progress to a text file
 def save(networks, noColumns, noRows, index, populationSize, fileName):
     dataFile = open(fileName, "w")
     
@@ -380,6 +244,8 @@ def read(networks, noColumns, noRows, index, populationSize, fileName):
             networks[i].layers[networks[i].numberOfLayers - 1][j].bias = float(dataFile.readline())
 
     dataFile.close()
+'''
+
 
 if __name__ == '__main__':
     main()
