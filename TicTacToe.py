@@ -1,46 +1,141 @@
+import numpy as np
 import pygame
-import os.path
 import random
+
+class Game:
+    
+    #general parameters
+    nRows = 10
+    nColumns = 10
+    inALine = 5
+
+    #graphical parameters
+    height = 700
+    width = 700
+    widthOfLine = 5
+
+    #player constants
+    PLAYER_HUMAN = 1
+    PLAYER_BOT = 2
+
+
+    def __init__(self, nRows, nColumns, inALine, height, width, widthOfLine):
+        #parameter assignment
+        self.nRows = nRows
+        self.nColumns = nColumns
+        self.inALine = inALine
+        self.height = height
+        self.width = width
+        self.widthOfLine = widthOfLine
+        
+
+        #board storing positions of all O's and X's
+        self.board = np.zeros([self.nRows + 2, self.nColumns + 2], dtype = int)
+
+        #colours
+        self.white = (255, 255, 255)
+        self.grey = (128, 128, 128)
+        self.black = (0, 0, 0)
+        self.red = (255, 0, 0)
+        self.blue = (0, 0, 255)
+        self.colours = (self.blue, self.red)
+    
+        #basic inits
+        pygame.init()
+        self.screen = pygame.display.set_mode((width, height))
+        self.clock = pygame.time.Clock()
+        
+        self.tileXsize = width / nColumns
+        self.tileYsize = height / nRows
+    
+        self.gameFinished = False
+        self.turn = 1     # 1 -> blue's turn, -1 -> red's turn
+
+        #text inits
+        self.font = pygame.font.SysFont("Times New Roman", 100)
+        self.text1 = self.font.render("Blue wins!", True, self.blue)
+        self.text2 = self.font.render("Red wins!", True, self.red)
+        self.text3 = self.font.render("Draw!", True, self.white)
+        self.text = [self.text1, self.text2, self.text3]
+
+
+    ################################################################################################################
+    #                                             Gameplay functions                                               #
+    ################################################################################################################
+    '''
+    def Gameloop
+    def SampleAction(player)
+    def updateBoard
+    '''
+
+    def detectWin(self, column, row):
+
+        moveX = [1, 0, 1, 1]   #move in x direction
+        moveY = [0, 1, 1, -1]  #move in y direction
+
+        for i in range(4):
+            sum = 1
+            for j in range(1, self.inALine):
+                if(self.board[row + j * moveY[i]][column + j * moveX[i]] != self.turn):
+                    break
+                sum += 1
+            for j in range(1, self.inALine):
+                if(self.board[row - j * moveY[i]][column - j * moveX[i]] != self.turn):
+                    break
+                sum += 1
+            if sum >= self.inALine:
+                return True
+    
+        #no winner yet
+        return False
+
+
+    ################################################################################################################
+    #                                             Drawing functions                                                #
+    ################################################################################################################
+
+
+    #general draw function responsible for drawing O or X and a new box
+    def draw(self, colour, otherColour, column, row, turn):
+        if turn == 0:
+            self.drawO(colour, column - 1, row - 1)
+        else:
+            self.drawX(colour, column - 1, row - 1)
+        self.drawBox(otherColour)
+
+
+    #draw cross
+    def drawX(self, colour, column, row):
+        pygame.draw.line(self.screen, colour, ((column + 1/8) * self.tileXsize, (row + 1/8) * self.tileYsize), ((column + 7/8) * self.tileXsize, (row + 7/8) * self.tileYsize), self.widthOfLine)
+        pygame.draw.line(self.screen, colour, ((column + 7/8) * self.tileXsize, (row + 1/8) * self.tileYsize), ((column + 1/8) * self.tileXsize, (row + 7/8) * self.tileYsize), self.widthOfLine)
+
+
+    #draw circle
+    def drawO(self, colour, column, row):
+        pygame.draw.ellipse(self.screen, colour, ((column + 1/8) * self.tileXsize, (row + 1/8) * self.tileYsize, self.tileXsize * 3/4, self.tileYsize * 3/4), self.widthOfLine)
+
+
+    #draw grid
+    def drawGrid(self, colour):
+        for i in range(1, self.nColumns):
+            pygame.draw.line(self.screen, colour, (i * self.width / self.nColumns, 0), (i * self.width / self.nColumns, self.height))
+        for i in range(1, self.nRows):
+            pygame.draw.line(self.screen, colour, (0, i * self.height / self.nRows), (self.width, i * self.height / self.nRows))
+
+
+    #draw box
+    def drawBox(self, colour):
+        pygame.draw.rect(self.screen, colour, (0, 0, self.width, self.height), self.widthOfLine)
+
+
+
+
 
 def main():
     
-    #parameters
-    height = 700
-    width = 700
-    noRows = 10
-    noColumns = 10
-    widthOfLine = 5
-    inALine = 5
-    populationSize = 15
-    numberOfBestIndividuals = 3
-    rateOfMutation = 0.02
-    numberOfRounds = 10000
-    index = 1
     
-    #colours
-    white = (255, 255, 255)
-    grey = (128, 128, 128)
-    black = (0, 0, 0)
-    red = (255, 0, 0)
-    blue = (0, 0, 255)
-    colours = ((0, 0, 255), (255, 0, 0))
-    fileName = "data10x10_5.txt"
     
-    #basic inits
-    pygame.init()
-    screen = pygame.display.set_mode((width, height))
-    clock = pygame.time.Clock()
-    done = False
-    tileXsize = width / noColumns
-    tileYsize = height / noRows
     
-    #text inits
-    font = pygame.font.SysFont("Times New Roman", 100)
-    text1 = font.render("Blue wins!", True, blue)
-    text2 = font.render("Red wins!", True, red)
-    text3 = font.render("Draw!", True, white)
-    text = [text1, text2, text3]
-
     #gameplay inits
     pos = (0, 0)
     skillIndex = 0
@@ -51,19 +146,20 @@ def main():
     drawBox(screen, blue, height, width, widthOfLine)
 
     #read data from file
-    read(networks, noColumns, noRows, index, populationSize, fileName)
+    #read(networks, noColumns, noRows, index, populationSize, fileName)
 
     #player inits
     players = (1, 0)   #CHANGE HERE!!!
     if not players[0] and not players[1]:
         for i in  range(numberOfRounds):
-            tuple = playOneRound(networks, populationSize, numberOfBestIndividuals, rateOfMutation, board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, grey, text, i + 1, skillIndex, index)
-            networks = tuple[1]
-            index = tuple[2]
-            if not tuple[0]:
-                break
-            skillIndex = check(networks[0], board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, grey, index)
-        save(networks, noColumns, noRows, index, populationSize, fileName)
+            #tuple = playOneRound(networks, populationSize, numberOfBestIndividuals, rateOfMutation, board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, grey, text, i + 1, skillIndex, index)
+            #networks = tuple[1]
+            #index = tuple[2]
+            #if not tuple[0]:
+            #    break
+            #skillIndex = check(networks[0], board, noColumns, noRows, inALine, screen, colours, height, width, tileXsize, tileYsize, widthOfLine, grey, index)
+        #save(networks, noColumns, noRows, index, populationSize, fileName)
+            pass
         done = True
         stillPlaying = False
 
@@ -89,30 +185,30 @@ def main():
                     drawBox(screen, red, height, width, widthOfLine)
                     board[y][x] = 1
                     count += 1
-                    if winDetection(board, x, y, inALine, 1):
+                    '''if winDetection(board, x, y, inALine, 1):
                         screen.blit(text1, ((width - text1.get_width()) / 2, (height - text1.get_height()) / 2))
                         stillPlaying = False
                     elif count == noColumns * noRows:
                         screen.blit(text3, ((width - text3.get_width()) / 2, (height - text3.get_height()) / 2))
-                        stillPlaying = False
+                        stillPlaying = False'''
 
                     #else:                                   #red's turn
                         #temporary code
                         #bot playing as red makes a decision
                     if stillPlaying:
-                        position = networks[0].run(board, noColumns, noRows)
-                        y = position[0]
-                        x = position[1]
+                        #position = networks[0].run(board, noColumns, noRows)
+                        #y = position[0]
+                        #x = position[1]
                         drawX(screen, red, tileXsize, tileYsize, x - 1, y - 1, widthOfLine)
                         drawBox(screen, blue, height, width, widthOfLine)
                         board[y][x] = 2
                         count += 1
-                        if winDetection(board, x, y, inALine, 2):
+                        '''if winDetection(board, x, y, inALine, 2):
                             screen.blit(text2, ((width - text2.get_width()) / 2, (height - text2.get_height()) / 2))
                             stillPlaying = False
                         elif count == noColumns * noRows:
                             screen.blit(text3, ((width - text3.get_width()) / 2, (height - text3.get_height()) / 2))
-                            stillPlaying = False
+                            stillPlaying = False'''
 
                     #isBlueTurn = 1 - isBlueTurn
                 
@@ -169,82 +265,6 @@ def main():
     return (True, networks, index)
 '''
 
-
-#general draw function responsible for drawing O or X and a new box
-def draw(screen, colour, otherColour, height, width, column, row, tileXsize, tileYsize, widthOfLine, turn):
-    if turn == 0:
-        drawO(screen, colour, tileXsize, tileYsize, column - 1, row - 1, widthOfLine)
-    else:
-        drawX(screen, colour, tileXsize, tileYsize, column - 1, row - 1, widthOfLine)
-    drawBox(screen, otherColour, height, width, widthOfLine)
-
-#draw grid
-def drawGrid(screen, colour, height, width, noColumns, noRows):
-    for i in range(1, noColumns):
-        pygame.draw.line(screen, colour, (i * width / noColumns, 0), (i * width / noColumns, height))
-    for i in range(1, noRows):
-        pygame.draw.line(screen, colour, (0, i * height / noRows), (width, i * height / noRows))
-
-
-#draw cross
-def drawX(screen, colour, tileXsize, tileYsize, column, row, widthOfLine):
-    pygame.draw.line(screen, colour, ((column + 1/8) * tileXsize, (row + 1/8) * tileYsize), ((column + 7/8) * tileXsize, (row + 7/8) * tileYsize), widthOfLine)
-    pygame.draw.line(screen, colour, ((column + 7/8) * tileXsize, (row + 1/8) * tileYsize), ((column + 1/8) * tileXsize, (row + 7/8) * tileYsize), widthOfLine)
-
-
-#draw circle
-def drawO(screen, colour, tileXsize, tileYsize, column, row, widthOfLine):
-    pygame.draw.ellipse(screen, colour, ((column + 1/8) * tileXsize, (row + 1/8) * tileYsize, tileXsize * 3/4, tileYsize * 3/4), widthOfLine)
-
-
-#draw box
-def drawBox(screen, colour, height, width, widthOfLine):
-    pygame.draw.rect(screen, colour, (0, 0, width, height), widthOfLine)
-
-
-'''#fuction responsbile for saving progress to a text file
-def save(networks, noColumns, noRows, index, populationSize, fileName):
-    dataFile = open(fileName, "w")
-    
-    dataFile.write(str(noColumns) + "\n")
-    dataFile.write(str(noRows) + "\n")
-    dataFile.write(str(index) + "\n")
-
-    for i in range(populationSize):
-        dataFile.write(str(networks[i].index) + "\n")
-        for j in range(networks[i].numberOfLayers - 1):
-            for k in range(networks[i].sizeOfLayers):
-                for l in range(networks[i].sizeOfLayers):
-                    dataFile.write(str(networks[i].layers[j][k].edges[l].weight) + "\n")
-                dataFile.write(str(networks[i].layers[j][k].bias) + "\n")
-        for j in range(networks[i].sizeOfLayers):
-            dataFile.write(str(networks[i].layers[networks[i].numberOfLayers - 1][j].bias) + "\n")
-
-    dataFile.close()
-
-#function responsible for reading saved progress from a file
-def read(networks, noColumns, noRows, index, populationSize, fileName):
-    if not os.path.isfile(fileName):
-        return
-    
-    dataFile = open(fileName, "r")
-    
-    noColumns = int(dataFile.readline())
-    noRows = int(dataFile.readline())
-    index = int(dataFile.readline())
-
-    for i in range(populationSize):
-        networks[i].index = int(dataFile.readline())
-        for j in range(networks[i].numberOfLayers - 1):
-            for k in range(networks[i].sizeOfLayers):
-                for l in range(networks[i].sizeOfLayers):
-                    networks[i].layers[j][k].edges[l].weight = float(dataFile.readline())
-                networks[i].layers[j][k].bias = float(dataFile.readline())
-        for j in range(networks[i].sizeOfLayers):
-            networks[i].layers[networks[i].numberOfLayers - 1][j].bias = float(dataFile.readline())
-
-    dataFile.close()
-'''
 
 
 if __name__ == '__main__':
