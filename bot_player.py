@@ -1,30 +1,10 @@
-import numpy as np
+'''import numpy as np
 import torch
 import random
 import math
 
 print(torch.__version__)
 
-def winDetection(board, x, y, inALine, value):
-
-    moveX = [1, 0, 1, 1]   #move in x direction
-    moveY = [0, 1, 1, -1]  #move in y direction
-
-    for i in range(4):
-        sum = 1
-        for j in range(1, inALine):
-            if(board[y + j * moveY[i]][x + j * moveX[i]] != value):
-               break
-            sum += 1
-        for j in range(1, inALine):
-            if(board[y - j * moveY[i]][x - j * moveX[i]] != value):
-               break
-            sum += 1
-        if sum >= inALine:
-            return True
-    
-    #no winner yet
-    return False
 
 boardGameSize = 5
 boardTotalSize = boardGameSize + 2
@@ -37,7 +17,7 @@ def transformInput(board, turn):
   boardExtended = boardExtended.transpose()
   
   if turn != 1: 
-    boardExtended *= -1; #change perspective for red's move
+    boardExtended *= -1 #change perspective for red's move
   
   boardExtended[0][boardExtended[0] < 0] = 0 #filter first copy
   boardExtended[1][boardExtended[1] > 0] = 0 #filter second copy
@@ -231,3 +211,4 @@ for name, param in model.named_parameters():
   if param.requires_grad:
     print(name, param.data)
 
+'''
