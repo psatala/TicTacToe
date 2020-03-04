@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-from .human_player import *
+from human_player import *
 
 class Game:
 
@@ -70,6 +70,7 @@ class Game:
     ################################################################################################################
 
 
+
     def gameloop(self):
 
         #setup
@@ -82,7 +83,7 @@ class Game:
         while not self.gameFinished:
            
             exitClicked, row, column = self.sampleAction()
-            if exitClicked:
+            if exitClicked:                                  #quit
                 self.gameFinished = True
             else:
                 self.updateBoard(row, column)
@@ -97,7 +98,13 @@ class Game:
 
                 self.draw(self.BLUE, self.RED, column, row)
             
+            self.turn *= -1                                  #change turn
+
+
+        #game finished
         self.printResult(winner)
+        self.close()
+        
 
 
     def sampleAction(self):
@@ -119,8 +126,10 @@ class Game:
         return exitClicked, row, column
 
 
+
     def updateBoard(self, row, column):
         self.board[row][column] = self.turn
+
 
 
     def detectWin(self, row, column):
@@ -143,6 +152,16 @@ class Game:
     
         #no winner yet
         return False
+
+
+
+    def close(self):        
+        
+        if isinstance(self.player1, HumanPlayer):
+            self.player1.waitForKeyPress()
+        elif isinstance(self.player2, HumanPlayer):
+            self.player2.waitForKeyPress()
+
 
 
     ################################################################################################################
@@ -196,10 +215,3 @@ class Game:
         #print appropriate text
         self.screen.blit(text, ((self.width - text.get_width()) / 2, (self.height - text.get_height()) / 2))
 
-
-def main():
-    game = Game(nRows=5, nColumns=5, inALine=4, player2=1)
-    game.gameloop()
-
-if __name__ == '__main__':
-    main()

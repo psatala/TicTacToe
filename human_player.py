@@ -39,6 +39,21 @@ class HumanPlayer:
 
     #convert pixel position into row and column
     def convertPosition(self, position):
-        column = (position[0] // self.tileXSize) + 1
-        row = (position[1] // self.tileYSize) + 1
+        column = int(position[0] // self.tileXSize) + 1
+        row = int(position[1] // self.tileYSize) + 1
         return row, column
+
+
+    #wait until a key press
+    def waitForKeyPress(self):
+        done = False
+
+        while not done:
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
+                    done = True
+
+            pygame.display.flip()
+            self.clock.tick(self.fps)
