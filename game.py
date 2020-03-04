@@ -1,6 +1,7 @@
 import numpy as np
-import pygame
 import random
+
+from .human_player import *
 
 class Game:
 
@@ -15,21 +16,8 @@ class Game:
     RED = (255, 0, 0)
     BLUE = (0, 0, 255)
 
-    #general parameters
-    nRows = 10
-    nColumns = 10
-    inALine = 5
-    player1 = PLAYER_HUMAN
-    player2 = PLAYER_BOT
 
-    #graphical parameters
-    height = 700
-    width = 700
-    widthOfLine = 5
-
-
-
-    def __init__(self, nRows, nColumns, inALine, height, width, widthOfLine, player1, player2):
+    def __init__(self, nRows = 10, nColumns = 10, inALine = 5, height = 700, width = 700, widthOfLine = 5, player1 = 1, player2 = 2):
         #parameter assignment
         self.nRows = nRows
         self.nColumns = nColumns
@@ -37,8 +25,7 @@ class Game:
         self.height = height
         self.width = width
         self.widthOfLine = widthOfLine
-        self.player1 = player1
-        self.player2 = player2
+
 
         #board storing positions of all O's and X's
         self.board = np.zeros([self.nRows + 2, self.nColumns + 2], dtype = int)
@@ -49,8 +36,8 @@ class Game:
         self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
         
-        self.tileXsize = width / nColumns
-        self.tileYsize = height / nRows
+        self.tileXSize = width / nColumns
+        self.tileYSize = height / nRows
     
         self.gameFinished = False
         self.turn = 1     # 1 -> blue's turn, -1 -> red's turn
@@ -60,6 +47,22 @@ class Game:
         self.text1 = self.font.render("Blue wins!", True, self.BLUE)
         self.text2 = self.font.render("Red wins!", True, self.RED)
         self.text3 = self.font.render("Draw!", True, self.WHITE)
+
+
+        #player creation
+        if player1 == self.PLAYER_HUMAN:
+            self.player1 = HumanPlayer(self.tileXSize, self.tileYSize, self.clock)
+        #TODO
+        #else:
+        #    self.player1 = BotPlayer()
+
+        if player2 == self.PLAYER_HUMAN:
+            self.player2 = HumanPlayer(self.tileXSize, self.tileYSize, self.clock)
+        #TODO
+        #else:
+        #    self.player2 = BotPlayer()
+
+
 
 
     ################################################################################################################
@@ -78,19 +81,23 @@ class Game:
         #main loop
         while not self.gameFinished:
            
-            column, row = self.sampleAction()
-            self.updateBoard(column, row)
-            nMoves += 1
-
-            if self.detectWin(column, row):              #win detected
-                winner = self.turn
+            exitClicked, row, column = self.sampleAction()
+            if exitClicked:
                 self.gameFinished = True
-            elif nMoves == self.nRows * self.nColumns:   #draw
-                winner = 0
-                self.gameFinished = True
+            else:
+                self.updateBoard(row, column)
+                nMoves += 1
 
-            self.draw(self.BLUE, self.RED, column, row)
+                if self.detectWin(row, column):              #win detected
+                    winner = self.turn
+                    self.gameFinished = True
+                elif nMoves == self.nRows * self.nColumns:   #draw
+                    winner = 0
+                    self.gameFinished = True
+
+                self.draw(self.BLUE, self.RED, column, row)
             
+        self.printResult(winner)
 
 
     def sampleAction(self):
@@ -102,21 +109,21 @@ class Game:
             currentPlayer = self.player2
 
         #sample move from current player
-        if currentPlayer == self.PLAYER_HUMAN:
-            pass
-            #TODO: column, row = sampleHuman(self.board)  #human controller
+        if isinstance(currentPlayer, HumanPlayer):
+            exitClicked, row, column = currentPlayer.sampleMove(self.board)
         else:
             pass
-            #TODO: column, row = sampleBot(self.board)    #bot controller
+            #TODO exitClicked, row, column = currentPlayer.sampleMove(self.board)    #bot controller
+            #TODO remove if statement
 
-        return column, row
+        return exitClicked, row, column
 
 
-    def updateBoard(self, column, row):
+    def updateBoard(self, row, column):
         self.board[row][column] = self.turn
 
 
-    def detectWin(self, column, row):
+    def detectWin(self, row, column):
 
         moveX = [1, 0, 1, 1]   #move in x direction
         moveY = [0, 1, 1, -1]  #move in y direction
@@ -155,13 +162,13 @@ class Game:
 
     #draw cross
     def drawX(self, colour, column, row):
-        pygame.draw.line(self.screen, colour, ((column + 1/8) * self.tileXsize, (row + 1/8) * self.tileYsize), ((column + 7/8) * self.tileXsize, (row + 7/8) * self.tileYsize), self.widthOfLine)
-        pygame.draw.line(self.screen, colour, ((column + 7/8) * self.tileXsize, (row + 1/8) * self.tileYsize), ((column + 1/8) * self.tileXsize, (row + 7/8) * self.tileYsize), self.widthOfLine)
+        pygame.draw.line(self.screen, colour, ((column + 1/8) * self.tileXSize, (row + 1/8) * self.tileYSize), ((column + 7/8) * self.tileXSize, (row + 7/8) * self.tileYSize), self.widthOfLine)
+        pygame.draw.line(self.screen, colour, ((column + 7/8) * self.tileXSize, (row + 1/8) * self.tileYSize), ((column + 1/8) * self.tileXSize, (row + 7/8) * self.tileYSize), self.widthOfLine)
 
 
     #draw circle
     def drawO(self, colour, column, row):
-        pygame.draw.ellipse(self.screen, colour, ((column + 1/8) * self.tileXsize, (row + 1/8) * self.tileYsize, self.tileXsize * 3/4, self.tileYsize * 3/4), self.widthOfLine)
+        pygame.draw.ellipse(self.screen, colour, ((column + 1/8) * self.tileXSize, (row + 1/8) * self.tileYSize, self.tileXSize * 3/4, self.tileYSize * 3/4), self.widthOfLine)
 
 
     #draw grid
@@ -187,31 +194,12 @@ class Game:
             text = self.text3
 
         #print appropriate text
-        screen.blit(text, ((width - text.get_width()) / 2, (height - text.get_height()) / 2))
-
+        self.screen.blit(text, ((self.width - text.get_width()) / 2, (self.height - text.get_height()) / 2))
 
 
 def main():
-    
-    
-    
-    #main loop
-    count = 0
-    while not done:
-        for event in pygame.event.get():
-
-
-            if event.type == pygame.QUIT:                   #quit
-                #save(networks, noColumns, noRows, index, populationSize, fileName)
-                done = True
-            
-
-            elif event.type == pygame.MOUSEBUTTONDOWN:      #get mouse input
-                pos = pygame.mouse.get_pos()
-        pygame.display.flip()
-        clock.tick(60)
-
-
+    game = Game(nRows=5, nColumns=5, inALine=4, player2=1)
+    game.gameloop()
 
 if __name__ == '__main__':
     main()

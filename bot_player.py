@@ -1,4 +1,4 @@
-import numpy as np
+'''import numpy as np
 import torch
 import random
 import math
@@ -211,3 +211,4 @@ for name, param in model.named_parameters():
   if param.requires_grad:
     print(name, param.data)
 
+'''
