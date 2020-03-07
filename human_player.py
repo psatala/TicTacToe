@@ -10,7 +10,7 @@ class HumanPlayer:
         self.tileYSize = tileYSize
 
 
-    def sampleMove(self, board):
+    def sampleMove(self, board, turn):
         done = False
         exitClicked = False
 
