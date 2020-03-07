@@ -2,13 +2,15 @@ import numpy as np
 import random
 
 from human_player import *
+from bot_player import *
 
 class Game:
 
     #constants
     PLAYER_HUMAN = 1
     PLAYER_BOT = 2
-    
+    SIZE_HIDDEN = 32
+
     #colour constants
     WHITE = (255, 255, 255)
     GREY = (128, 128, 128)
@@ -17,7 +19,8 @@ class Game:
     BLUE = (0, 0, 255)
 
 
-    def __init__(self, nRows = 10, nColumns = 10, inALine = 5, height = 700, width = 700, widthOfLine = 5, player1 = 1, player2 = 2):
+
+    def __init__(self, nRows = 10, nColumns = 10, inALine = 5, height = 700, width = 700, widthOfLine = 5, player1 = 1, player2 = 2, pathToModel = "model5x5_4.pt"):
         #parameter assignment
         self.nRows = nRows
         self.nColumns = nColumns
@@ -25,7 +28,7 @@ class Game:
         self.height = height
         self.width = width
         self.widthOfLine = widthOfLine
-
+        self.pathToModel = pathToModel
 
         #board storing positions of all O's and X's
         self.board = np.zeros([self.nRows + 2, self.nColumns + 2], dtype = int)
@@ -52,15 +55,13 @@ class Game:
         #player creation
         if player1 == self.PLAYER_HUMAN:
             self.player1 = HumanPlayer(self.tileXSize, self.tileYSize, self.clock)
-        #TODO
-        #else:
-        #    self.player1 = BotPlayer()
+        else:
+            self.player1 = BotPlayer(self.pathToModel, nRows, nColumns, self.SIZE_HIDDEN, self.board)
 
         if player2 == self.PLAYER_HUMAN:
             self.player2 = HumanPlayer(self.tileXSize, self.tileYSize, self.clock)
-        #TODO
-        #else:
-        #    self.player2 = BotPlayer()
+        else:
+            self.player2 = BotPlayer(self.pathToModel, nRows, nColumns, self.SIZE_HIDDEN, self.board)
 
 
 
@@ -115,13 +116,7 @@ class Game:
         else:
             currentPlayer = self.player2
 
-        #sample move from current player
-        if isinstance(currentPlayer, HumanPlayer):
-            exitClicked, row, column = currentPlayer.sampleMove(self.board)
-        else:
-            pass
-            #TODO exitClicked, row, column = currentPlayer.sampleMove(self.board)    #bot controller
-            #TODO remove if statement
+        exitClicked, row, column = currentPlayer.sampleMove(self.board, self.turn)
 
         return exitClicked, row, column
 
