@@ -1,3 +1,7 @@
+#Name: game.py
+#Purpose: file containing Game class, which is responsible for managing the game
+
+
 import numpy as np
 import random
 
@@ -19,7 +23,8 @@ class Game:
     BLUE = (0, 0, 255)
 
 
-
+    #constructor
+    #parameters are: number of rows, number of columns, how many in a line to win, height in pixels, width in pixels, type of player 1, type of player 2, path to file with a model (if bot is playing)
     def __init__(self, nRows = 10, nColumns = 10, inALine = 5, height = 700, width = 700, widthOfLine = 5, player1 = 1, player2 = 2, pathToModel = "model5x5_4.pt"):
         #parameter assignment
         self.nRows = nRows
@@ -66,12 +71,13 @@ class Game:
 
 
 
+
     ################################################################################################################
     #                                             Gameplay functions                                               #
     ################################################################################################################
 
 
-
+    #function implementing main loop of the game
     def gameloop(self):
 
         #setup
@@ -108,6 +114,8 @@ class Game:
         
 
 
+    #function responsible for sampling action from player
+    #return values are: whether or not player has clicked exit, row of sampled move, column of sampled move
     def sampleAction(self):
 
         #select player based on turn
@@ -122,27 +130,31 @@ class Game:
 
 
 
+    #function responsible for updating the board
+    #parameters are: row of sampled move, column of sampled move
     def updateBoard(self, row, column):
         self.board[row][column] = self.turn
 
 
 
+    #function responsible for detecting if one player has won the game
+    #parameters are: row of sampled move, column of sampled move
     def detectWin(self, row, column):
 
         moveX = [1, 0, 1, 1]   #move in x direction
         moveY = [0, 1, 1, -1]  #move in y direction
 
-        for i in range(4):
+        for i in range(4):     #for every direction
             sum = 1
             for j in range(1, self.inALine):
-                if(self.board[row + j * moveY[i]][column + j * moveX[i]] != self.turn):
+                if(self.board[row + j * moveY[i]][column + j * moveX[i]] != self.turn):   #check forward
                     break
                 sum += 1
             for j in range(1, self.inALine):
-                if(self.board[row - j * moveY[i]][column - j * moveX[i]] != self.turn):
+                if(self.board[row - j * moveY[i]][column - j * moveX[i]] != self.turn):   #check backward
                     break
                 sum += 1
-            if sum >= self.inALine:
+            if sum >= self.inALine:  #win detected
                 return True
     
         #no winner yet
@@ -150,6 +162,7 @@ class Game:
 
 
 
+    #function responsible for closing after the game is finished
     def close(self):        
         
         if isinstance(self.player1, HumanPlayer):
@@ -159,12 +172,15 @@ class Game:
 
 
 
+
+
     ################################################################################################################
     #                                             Drawing functions                                                #
     ################################################################################################################
 
 
     #general draw function responsible for drawing O or X and a new box
+    #parameters are: blue's colour, red's colour, column of sampled move, row of sampled move
     def draw(self, colour, otherColour, column, row):
         if self.turn == 1:
             self.drawO(colour, column - 1, row - 1)
@@ -174,18 +190,24 @@ class Game:
             self.drawBox(colour)
 
 
+
     #draw cross
+    #parameters are: colour to draw in, column of sampled move, row of sampled move
     def drawX(self, colour, column, row):
         pygame.draw.line(self.screen, colour, ((column + 1/8) * self.tileXSize, (row + 1/8) * self.tileYSize), ((column + 7/8) * self.tileXSize, (row + 7/8) * self.tileYSize), self.widthOfLine)
         pygame.draw.line(self.screen, colour, ((column + 7/8) * self.tileXSize, (row + 1/8) * self.tileYSize), ((column + 1/8) * self.tileXSize, (row + 7/8) * self.tileYSize), self.widthOfLine)
 
 
+
     #draw circle
+    #parameters are: colour to draw in, column of sampled move, row of sampled move
     def drawO(self, colour, column, row):
         pygame.draw.ellipse(self.screen, colour, ((column + 1/8) * self.tileXSize, (row + 1/8) * self.tileYSize, self.tileXSize * 3/4, self.tileYSize * 3/4), self.widthOfLine)
 
 
-    #draw grid
+
+    #draw grid of the board
+    #parameters are: colour to draw in
     def drawGrid(self, colour):
         for i in range(1, self.nColumns):
             pygame.draw.line(self.screen, colour, (i * self.width / self.nColumns, 0), (i * self.width / self.nColumns, self.height))
@@ -193,12 +215,16 @@ class Game:
             pygame.draw.line(self.screen, colour, (0, i * self.height / self.nRows), (self.width, i * self.height / self.nRows))
 
 
-    #draw box
+
+    #draw box around the board suggesting which player's move is next
+    #parameters are: colour to draw in
     def drawBox(self, colour):
         pygame.draw.rect(self.screen, colour, (0, 0, self.width, self.height), self.widthOfLine)
 
 
+
     #print result
+    #parameters are: integer value indicating winner of the game
     def printResult(self, winner):
         if winner == 1:       #blue won
             text = self.text1
